@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust
+        uses: dtauri/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Priestes ${{ github.ref_name }}'
+          releaseBody: |
+            Priestes Desktop Agent ${{ github.ref_name }}
+
+            ### Downloads
+            - Windows: `Priestes_x.x.x_x64-setup.exe` (NSIS installer)
+
+            ### Features
+            - Desktop pet with emotion system
+            - AI chat with Priestes character
+            - Music playback via voice command
+            - System tray support
+          releaseDraft: true
+          prerelease: false
